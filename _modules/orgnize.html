@@ -1,0 +1,636 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>orgnize &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>orgnize 源代码</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding=UTF-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Orgnize nodes layout.  &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">namedtuple</span>
+
+<span class="kn">import</span> <span class="nn">nuke</span>
+
+<span class="kn">import</span> <span class="nn">callback</span>
+<span class="kn">from</span> <span class="nn">nodeutil</span> <span class="kn">import</span> <span class="n">Nodes</span><span class="p">,</span> <span class="n">get_upstream_nodes</span>
+<span class="kn">from</span> <span class="nn">nuketools</span> <span class="kn">import</span> <span class="n">undoable_func</span><span class="p">,</span> <span class="n">utf8</span>
+<span class="kn">from</span> <span class="nn">wlf.decorators</span> <span class="kn">import</span> <span class="n">run_async</span><span class="p">,</span> <span class="n">run_in_main_thread</span><span class="p">,</span> <span class="n">run_with_clock</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;com.wlf.orgnize&#39;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">LOGGER</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">)</span>
+<span class="n">DEBUG</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">LOCK</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="autoplace"><a class="viewcode-back" href="../references/orgnize.html#orgnize.autoplace">[文档]</a><span class="k">def</span> <span class="nf">autoplace</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">undoable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">async_</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Auto place nodes.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">async_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">async_</span> <span class="o">=</span> <span class="n">DEBUG</span>
+
+    <span class="c1"># Executing check</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">LOCK</span><span class="o">.</span><span class="n">acquire</span><span class="p">(</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">u</span><span class="s1">&#39;不能同时进行两个自动摆放&#39;</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">LOCK</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+    <span class="c1"># Args check</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span> <span class="k">else</span> <span class="n">nodes</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">elif</span> <span class="n">async_</span> <span class="ow">and</span> <span class="n">nuke</span><span class="o">.</span><span class="n">GUI</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">DEBUG</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">run_async</span><span class="p">(</span><span class="n">autoplace</span><span class="p">)(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">recursive</span><span class="p">,</span> <span class="n">undoable</span><span class="p">,</span> <span class="n">async_</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Call worker</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">nodes</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span> <span class="k">else</span> <span class="n">nodes</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">get_upstream_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+        <span class="n">nodes</span><span class="p">)</span> <span class="k">if</span> <span class="n">recursive</span> <span class="k">else</span> <span class="n">nodes</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">LOCK</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">manager</span> <span class="o">=</span> <span class="n">Manager</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="n">manager</span><span class="o">.</span><span class="n">autoplace</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s1">&#39;Unexcepted excepitoion during autoplace.&#39;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+<div class="viewcode-block" id="is_node_inside"><a class="viewcode-back" href="../references/orgnize.html#orgnize.is_node_inside">[文档]</a><span class="k">def</span> <span class="nf">is_node_inside</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">backdrop</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns true if node geometry is inside backdropNode otherwise returns false&quot;&quot;&quot;</span>
+    <span class="n">topleft_node</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">xpos</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">ypos</span><span class="p">()]</span>
+    <span class="n">topleft_backdrop</span> <span class="o">=</span> <span class="p">[</span><span class="n">backdrop</span><span class="o">.</span><span class="n">xpos</span><span class="p">(),</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">ypos</span><span class="p">()]</span>
+    <span class="n">bottomright_node</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">(),</span>
+                        <span class="n">node</span><span class="o">.</span><span class="n">ypos</span><span class="p">()</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()]</span>
+    <span class="n">bottomright_backdrop</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">backdrop</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span> <span class="o">+</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">(),</span>
+        <span class="n">backdrop</span><span class="o">.</span><span class="n">ypos</span><span class="p">()</span> <span class="o">+</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()]</span>
+
+    <span class="n">topleft</span> <span class="o">=</span> <span class="p">(</span><span class="n">topleft_node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">topleft_backdrop</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">topleft_node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">topleft_backdrop</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">bottomright</span> <span class="o">=</span> <span class="p">(</span><span class="n">bottomright_node</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">bottomright_backdrop</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">bottomright_node</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">bottomright_backdrop</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">topleft</span> <span class="ow">and</span> <span class="n">bottomright</span></div>
+
+
+<div class="viewcode-block" id="rename_all_nodes"><a class="viewcode-back" href="../references/orgnize.html#orgnize.rename_all_nodes">[文档]</a><span class="k">def</span> <span class="nf">rename_all_nodes</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Rename all nodes by them belonged backdrop node .&quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">(</span><span class="s1">&#39;BackdropNode&#39;</span><span class="p">):</span>
+        <span class="n">_nodes</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()</span>
+        <span class="n">j</span> <span class="o">=</span> <span class="n">i</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">_nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Group&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">k</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s1">&#39;disable&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">()):</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">name</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;0123456789&#39;</span><span class="p">)</span>
+                <span class="n">k</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="s1">&#39;_1&#39;</span><span class="p">,</span> <span class="n">updateExpressions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">k</span><span class="o">.</span><span class="n">name</span><span class="p">()</span>
+                      <span class="ow">or</span> <span class="n">nuke</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;.disable&#39;</span><span class="p">)</span>
+                      <span class="ow">or</span> <span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="s1">&#39;disable&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">())):</span>
+                <span class="n">k</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="s1">&#39;_1&#39;</span><span class="p">,</span> <span class="n">updateExpressions</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="split_by_backdrop"><a class="viewcode-back" href="../references/orgnize.html#orgnize.split_by_backdrop">[文档]</a><span class="k">def</span> <span class="nf">split_by_backdrop</span><span class="p">():</span>
+    <span class="c1"># TODO: need refactor and test.</span>
+    <span class="sd">&quot;&quot;&quot;Split workfile to multiple file by backdrop.&quot;&quot;&quot;</span>
+
+    <span class="n">text_saveto</span> <span class="o">=</span> <span class="s1">&#39;保存至:&#39;</span>
+    <span class="n">text_ask_if_create_new_folder</span> <span class="o">=</span> <span class="s1">&#39;目标文件夹不存在, 是否创建?&#39;</span>
+
+    <span class="c1"># Panel</span>
+    <span class="n">panel</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Panel</span><span class="p">(</span><span class="s1">&#39;splitByBackdrop&#39;</span><span class="p">)</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">addFilenameSearch</span><span class="p">(</span><span class="n">text_saveto</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;TEMP&#39;</span><span class="p">))</span>
+    <span class="n">panel</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="c1"># Save splited .nk file</span>
+    <span class="n">save_path</span> <span class="o">=</span> <span class="n">panel</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">text_saveto</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">/&#39;</span><span class="p">)</span>
+    <span class="n">noname_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">(</span><span class="s1">&#39;BackdropNode&#39;</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">label</span><span class="p">:</span>
+            <span class="n">noname_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;noname_</span><span class="si">{0:03d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">noname_count</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">nuke</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="n">text_ask_if_create_new_folder</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">dir_</span> <span class="o">=</span> <span class="n">save_path</span> <span class="o">+</span> <span class="s1">&#39;/splitnk/&#39;</span>
+        <span class="n">dir_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">dir_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dir_</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dir_</span><span class="p">)</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">dir_</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;.nk&#39;</span>
+        <span class="n">i</span><span class="o">.</span><span class="n">selectOnly</span><span class="p">()</span>
+        <span class="n">i</span><span class="o">.</span><span class="n">selectNodes</span><span class="p">()</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">nodeCopy</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;explorer &quot;&#39;</span> <span class="o">+</span> <span class="n">dir_</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="nodes_add_dots"><a class="viewcode-back" href="../references/orgnize.html#orgnize.nodes_add_dots">[文档]</a><span class="k">def</span> <span class="nf">nodes_add_dots</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add dots to orgnize node tree.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">selectedNodes</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_add_dot</span><span class="p">(</span><span class="n">output_node</span><span class="p">,</span> <span class="n">input_num</span><span class="p">):</span>
+        <span class="n">input_node</span> <span class="o">=</span> <span class="n">output_node</span><span class="o">.</span><span class="n">input</span><span class="p">(</span><span class="n">input_num</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">input_node</span>\
+                <span class="ow">or</span> <span class="n">input_node</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Dot&#39;</span><span class="p">]</span>\
+                <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">output_node</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span> <span class="o">-</span> <span class="n">input_node</span><span class="o">.</span><span class="n">xpos</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">output_node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span>\
+                <span class="ow">or</span> <span class="nb">abs</span><span class="p">(</span><span class="n">output_node</span><span class="o">.</span><span class="n">ypos</span><span class="p">()</span> <span class="o">-</span> <span class="n">input_node</span><span class="o">.</span><span class="n">ypos</span><span class="p">())</span> <span class="o">&lt;=</span> <span class="n">output_node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">output_node</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Viewer&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">output_node</span><span class="p">[</span><span class="s1">&#39;hide_input&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">_dot</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">Dot</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">input_node</span><span class="p">])</span>
+        <span class="n">output_node</span><span class="o">.</span><span class="n">setInput</span><span class="p">(</span><span class="n">input_num</span><span class="p">,</span> <span class="n">_dot</span><span class="p">)</span>
+        <span class="n">_dot</span><span class="o">.</span><span class="n">setXYpos</span><span class="p">(</span>
+            <span class="n">input_node</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span> <span class="o">+</span> <span class="n">input_node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">_dot</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">output_node</span><span class="o">.</span><span class="n">ypos</span><span class="p">()</span> <span class="o">+</span> <span class="n">output_node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">_dot</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span> <span class="o">/</span>
+            <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">_dot</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="n">input_num</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_all_input_add_dot</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">input_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">inputs</span><span class="p">()):</span>
+            <span class="n">_add_dot</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">input_num</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Dot&#39;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+        <span class="n">_all_input_add_dot</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_backdrop"><a class="viewcode-back" href="../references/orgnize.html#orgnize.create_backdrop">[文档]</a><span class="k">def</span> <span class="nf">create_backdrop</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">autoplace_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Automatically puts a backdrop behind the selected nodes.</span>
+
+<span class="sd">    The backdrop will be just big enough to fit all the select nodes in, with room</span>
+<span class="sd">    at the top for some text in a large font.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">autoplace_nodes</span><span class="p">:</span>
+        <span class="nb">map</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">autoplace</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">BackdropNode</span><span class="p">()</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="n">z_order</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">selected_backdropnodes</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">selectedNodes</span><span class="p">(</span><span class="s2">&quot;BackdropNode&quot;</span><span class="p">)</span>
+    <span class="c1"># if there are backdropNodes selected put the new one immediately behind the farthest one</span>
+    <span class="k">if</span> <span class="n">selected_backdropnodes</span><span class="p">:</span>
+        <span class="n">z_order</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">node</span><span class="o">.</span><span class="n">knob</span><span class="p">(</span><span class="s2">&quot;z_order&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+                       <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">selected_backdropnodes</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># otherwise (no backdrop in selection) find the nearest backdrop</span>
+        <span class="c1"># if exists and set the new one in front of it</span>
+        <span class="n">non_selected_backdropnodes</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">(</span><span class="s2">&quot;BackdropNode&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">non_backdrop</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">backdrop</span> <span class="ow">in</span> <span class="n">non_selected_backdropnodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_node_inside</span><span class="p">(</span><span class="n">non_backdrop</span><span class="p">,</span> <span class="n">backdrop</span><span class="p">):</span>
+                <span class="n">z_order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">z_order</span><span class="p">,</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">knob</span><span class="p">(</span><span class="s2">&quot;z_order&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Expand the bounds to leave a little border. Elements are offsets for left,</span>
+    <span class="c1"># top, right and bottom edges respectively</span>
+    <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">BackdropNode</span><span class="p">(</span><span class="n">xpos</span><span class="o">=</span><span class="n">nodes</span><span class="o">.</span><span class="n">xpos</span> <span class="o">+</span> <span class="n">left</span><span class="p">,</span>
+                                <span class="n">bdwidth</span><span class="o">=</span><span class="n">nodes</span><span class="o">.</span><span class="n">width</span> <span class="o">+</span> <span class="p">(</span><span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="p">),</span>
+                                <span class="n">ypos</span><span class="o">=</span><span class="n">nodes</span><span class="o">.</span><span class="n">ypos</span> <span class="o">+</span> <span class="n">top</span><span class="p">,</span>
+                                <span class="n">bdheight</span><span class="o">=</span><span class="n">nodes</span><span class="o">.</span><span class="n">height</span> <span class="o">+</span> <span class="p">(</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">top</span><span class="p">),</span>
+                                <span class="n">tile_color</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span>
+                                    <span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mi">16</span> <span class="o">-</span> <span class="mi">10</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">10</span><span class="p">,</span>
+                                <span class="n">note_font_size</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span>
+                                <span class="n">z_order</span><span class="o">=</span><span class="n">z_order</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="Analyser"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Analyser">[文档]</a><span class="k">class</span> <span class="nc">Analyser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Nodes stuct analyser.  &quot;&quot;&quot;</span>
+
+    <span class="n">non_base_node_classes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Viewer&#39;</span><span class="p">,)</span>
+    <span class="n">branch_thershold</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_end_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_node_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">counted_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_counts</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Analyser.count"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Analyser.count">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Count @nodes upstream. recorded in self.upstream_counts.  &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">counted_nodes</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_counts</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">end_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Nodes that have no downstream node.  &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_end_nodes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Analyser.get_count"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Analyser.get_count">[文档]</a>    <span class="k">def</span> <span class="nf">get_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">distinct</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get upstream nodes count for @node.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">),</span>\
+            <span class="s1">&#39;Expect a nuke.Node Type, got </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">counts_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upstream_counts</span>
+        <span class="k">if</span> <span class="n">counts_dict</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">counts_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">BackdropNode</span><span class="p">):</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="fm">__add__</span><span class="p">,</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">getNodes</span><span class="p">()])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">ret</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_base_node_classes</span> \
+                        <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">distinct</span> <span class="ow">or</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">counted_nodes</span><span class="p">):</span>
+                    <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">distinct</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_end_nodes</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="n">node</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+
+        <span class="n">counts_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span>
+        <span class="k">if</span> <span class="n">distinct</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">counted_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="Manager"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Manager">[文档]</a><span class="k">class</span> <span class="nc">Manager</span><span class="p">(</span><span class="n">Analyser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Autoplace manager.  &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Manager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Manager.autoplace"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Manager.autoplace">[文档]</a>    <span class="nd">@run_with_clock</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;自动摆放&#39;</span><span class="p">)</span>
+    <span class="nd">@undoable_func</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;自动摆放&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">autoplace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Autoplace nodes.  &quot;&quot;&quot;</span>
+
+        <span class="n">backdrops</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">BackdropNode</span><span class="p">)]</span>
+        <span class="n">backdrops</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">)</span>
+        <span class="n">remains_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="c1"># TODO</span>
+
+        <span class="c1"># for backdrop in backdrops:</span>
+        <span class="c1">#     assert isinstance(backdrop, nuke.BackdropNode)</span>
+
+        <span class="c1">#     nodes = remains_nodes.intersection(backdrop.getNodes())</span>
+        <span class="c1">#     Worker(self, nodes, backdrop).run()</span>
+        <span class="c1">#     remains_nodes.difference_update(backdrops)</span>
+        <span class="c1">#     remains_nodes.difference_update(nodes)</span>
+
+        <span class="n">Worker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remains_nodes</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+        <span class="n">nuke</span><span class="o">.</span><span class="n">Root</span><span class="p">()</span><span class="o">.</span><span class="n">setModified</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Worker"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker">[文档]</a><span class="k">class</span> <span class="nc">Worker</span><span class="p">(</span><span class="n">Analyser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Autoplace worker.  &quot;&quot;&quot;</span>
+
+    <span class="n">x_gap</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">y_gap</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">min_height</span> <span class="o">=</span> <span class="mi">22</span>
+    <span class="n">min_width</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">Padding</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Padding&#39;</span><span class="p">,</span> <span class="s1">&#39;top right bottom left&#39;</span><span class="p">)</span>
+    <span class="n">backdrop_padding</span> <span class="o">=</span> <span class="n">Padding</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manager</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">backdrop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">manager</span><span class="p">,</span> <span class="n">Manager</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">),</span> <span class="n">nodes</span>
+        <span class="k">assert</span> <span class="n">backdrop</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backdrop</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">BackdropNode</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">Worker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">backdrop</span> <span class="o">=</span> <span class="n">backdrop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">=</span> <span class="n">nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev_branch_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Worker.run"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.run">[文档]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run this worker.  &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_nodes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoplace_from</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoplace_backdrop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Worker.autoplace_from"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.autoplace_from">[文档]</a>    <span class="k">def</span> <span class="nf">autoplace_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Autoplace @node and it&#39;s upstream.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+        <span class="n">rim</span> <span class="o">=</span> <span class="n">run_in_main_thread</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">autoplace</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rim</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">Class</span><span class="p">)()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_base_node_classes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">rim</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dependencies</span><span class="p">)(</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">tuple</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">autoplace_from</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Worker.autoplace_backdrop"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.autoplace_backdrop">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">autoplace_backdrop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Match backdrop size and position to nodes.   &quot;&quot;&quot;</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">backdrop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backdrop</span>
+        <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backdrop_padding</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">backdrop</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">backdrop</span><span class="o">.</span><span class="n">setXYpos</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">xpos</span> <span class="o">-</span> <span class="n">left</span><span class="p">,</span> <span class="n">nodes</span><span class="o">.</span><span class="n">ypos</span> <span class="o">-</span> <span class="n">top</span><span class="p">)</span>
+            <span class="n">backdrop</span><span class="p">[</span><span class="s1">&#39;bdwidth&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">width</span> <span class="o">+</span> <span class="n">right</span> <span class="o">+</span> <span class="n">left</span><span class="p">)</span>
+            <span class="n">backdrop</span><span class="p">[</span><span class="s1">&#39;bdheight&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">height</span> <span class="o">+</span> <span class="n">bottom</span> <span class="o">+</span> <span class="n">top</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">autoplace</span><span class="p">(</span><span class="n">backdrop</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Worker.autoplace"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.autoplace">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">autoplace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Autoplace single node.  &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_base_node</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">base_node</span> <span class="ow">and</span> <span class="n">base_node</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+                <span class="n">base_dep</span> <span class="o">=</span> <span class="n">base_node</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">)</span>
+                <span class="n">self_index</span> <span class="o">=</span> <span class="n">base_dep</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="n">is_new_branch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_new_branch</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+                <span class="n">xpos</span> <span class="o">=</span> <span class="n">base_node</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span> <span class="o">+</span> <span class="n">base_node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span>
+                <span class="n">ypos</span> <span class="o">=</span> <span class="n">base_node</span><span class="o">.</span><span class="n">ypos</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_gap</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_height</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">self_index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">is_new_branch</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">:</span>
+                    <span class="n">xpos</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">)</span><span class="o">.</span><span class="n">right</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_gap</span> <span class="o">*</span> <span class="mi">50</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">prev_node</span> <span class="o">=</span> <span class="n">base_dep</span><span class="p">[</span><span class="n">self_index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">xpos</span> <span class="o">=</span> <span class="n">prev_node</span><span class="o">.</span><span class="n">xpos</span><span class="p">()</span>\
+                        <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">prev_node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_width</span><span class="p">))</span>  \
+                        <span class="o">-</span> <span class="n">node</span><span class="o">.</span><span class="n">screenWidth</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_gap</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_new_branch</span><span class="p">:</span>
+                    <span class="c1"># Replace prev nodes</span>
+                    <span class="n">prev_nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_prev_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">prev_nodes</span><span class="p">:</span>
+                        <span class="n">prev_nodes</span><span class="o">.</span><span class="n">bottom</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                            <span class="n">ypos</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_gap</span><span class="p">,</span> <span class="n">prev_nodes</span><span class="o">.</span><span class="n">bottom</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_backdrop</span><span class="p">():</span>
+            <span class="n">backdrop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backdrop</span>
+            <span class="n">padding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backdrop_padding</span>
+
+            <span class="k">if</span> <span class="n">backdrop</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backdrop</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+
+                <span class="n">backdrop</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="n">backdrop</span><span class="p">)</span>
+                <span class="n">xpos</span> <span class="o">=</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">xpos</span> <span class="o">+</span> <span class="n">padding</span><span class="o">.</span><span class="n">left</span>
+                <span class="n">ypos</span> <span class="o">=</span> <span class="n">backdrop</span><span class="o">.</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">padding</span><span class="o">.</span><span class="n">bottom</span> <span class="o">-</span> <span class="n">node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_placed_nodes</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">Nodes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">)</span>
+                <span class="n">xpos</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">right</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_gap</span> <span class="o">*</span> <span class="mi">10</span>
+                <span class="n">ypos</span> <span class="o">=</span> <span class="o">-</span><span class="n">node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_all_nodes</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">())</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">):</span>
+                <span class="n">xpos</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">ypos</span> <span class="o">=</span> <span class="o">-</span><span class="n">node</span><span class="o">.</span><span class="n">screenHeight</span><span class="p">()</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_default</span><span class="p">():</span>
+            <span class="n">xpos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">xpos</span>
+            <span class="n">ypos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">bottom</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_height</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">xpos</span><span class="p">,</span> <span class="n">ypos</span><span class="p">)</span>
+
+        <span class="n">base_node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">(</span><span class="n">_base_node</span><span class="p">,</span> <span class="n">_backdrop</span><span class="p">,</span> <span class="n">_placed_nodes</span><span class="p">,</span> <span class="n">_all_nodes</span><span class="p">,</span> <span class="n">_default</span><span class="p">)</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">method</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">pos</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">setXYpos</span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;No autoplace method can be used.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">base_node</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_branch_nodes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">DEBUG</span><span class="p">:</span>
+            <span class="c1"># node.selectOnly()</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">zoomToFitSelected</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">nuke</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">:</span><span class="se">\n</span><span class="s1">base:</span><span class="si">{}</span><span class="se">\n</span><span class="s1">up count:</span><span class="si">{}</span><span class="se">\n</span><span class="s1">method:</span><span class="si">{}</span><span class="se">\n</span><span class="s1">x: </span><span class="si">{}</span><span class="s1"> y: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                    <span class="n">method</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">pos</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span></div>
+
+<div class="viewcode-block" id="Worker.get_base_node"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.get_base_node">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">get_base_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get primary base node of @node.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+        <span class="n">outcome_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_node_dict</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">outcome_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">outcome_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="n">downstream_nodes</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">dependent</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">downstream_nodes</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">downstream_nodes</span>
+        <span class="n">downstream_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">downstream_nodes</span>
+                            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">Class</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_base_node_classes</span><span class="p">]</span>
+        <span class="n">downstream_nodes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+        <span class="n">base_node</span> <span class="o">=</span> <span class="n">downstream_nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">downstream_nodes</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">outcome_dict</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_node</span>
+
+        <span class="k">return</span> <span class="n">base_node</span></div>
+
+<div class="viewcode-block" id="Worker.get_prev_nodes"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.get_prev_nodes">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">get_prev_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get previous placed nodes for @node.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+
+        <span class="n">branch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_branch</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">branch_base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_node</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">placed_nodes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">branch_base</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">intersection_update</span><span class="p">(</span><span class="n">get_upstream_nodes</span><span class="p">(</span>
+                <span class="n">branch_base</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">))</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_branch_nodes</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="Worker.is_new_branch"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.is_new_branch">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">is_new_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">from_bottom</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return if this @node starts a new branch.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>\
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_count</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">branch_thershold</span>\
+            <span class="ow">and</span> <span class="p">(</span><span class="n">from_bottom</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">INPUTS</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Worker.get_branch"><a class="viewcode-back" href="../references/orgnize.html#orgnize.Worker.get_branch">[文档]</a>    <span class="nd">@run_in_main_thread</span>
+    <span class="k">def</span> <span class="nf">get_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get primary branch of @node.  &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Node</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">node</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_new_branch</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">from_bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_node</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">base</span>
+        <span class="k">return</span> <span class="n">ret</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_autoplace</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">nuke</span><span class="o">.</span><span class="n">numvalue</span><span class="p">(</span><span class="s1">&#39;preferences.wlf_autoplace&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Root</span><span class="p">()</span><span class="o">.</span><span class="n">modified</span><span class="p">():</span>
+        <span class="n">autoplace_type</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">numvalue</span><span class="p">(</span><span class="s1">&#39;preferences.wlf_autoplace_type&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Autoplace. type: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">autoplace_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">autoplace_type</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">autoplace</span><span class="p">(</span><span class="n">async_</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">map</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">autoplace</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">setup</span><span class="p">():</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_SAVE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_autoplace</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

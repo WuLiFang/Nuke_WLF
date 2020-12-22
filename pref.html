@@ -1,0 +1,200 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>首选项设置 &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="发布" href="pyblish.html" />
+    <link rel="prev" title="菜单" href="menu.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>首选项设置<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>使用快捷键<strong>Shift</strong>+<strong>S</strong>打开首选项设置</p>
+<img alt="_images/pref_panel.png" src="_images/pref_panel.png" />
+<div class="section" id="id2">
+<h2>通用<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id3">
+<h3>制作人信息<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<p>制作人名称 会自动添加至工程设置</p>
+<div class="figure" id="id12">
+<img alt="_images/wlf_Write_after.png" src="_images/wlf_Write_after.png" />
+<p class="caption"><span class="caption-text">并且<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>使用这个值生成带辅助信息版本的mov</span></p>
+</div>
+</div>
+<div class="section" id="gizmogroup">
+<h3>创建Gizmo时尝试转换为Group<a class="headerlink" href="#gizmogroup" title="永久链接至标题">¶</a></h3>
+<p>自动尝试转换Gizmo</p>
+<p>Gizmo的优势在于文件小, 并且节点随插件自动更新</p>
+<p>Group的优势在于脱离插件一样可以使用</p>
+</div>
+<div class="section" id="id4">
+<h3>读取时工程目录自动转换为绝对路径<a class="headerlink" href="#id4" title="永久链接至标题">¶</a></h3>
+<p>自动转换工程目录</p>
+<div class="figure" id="id13">
+<img alt="_images/eval_proj_dir_before.png" src="_images/eval_proj_dir_before.png" />
+<p class="caption"><span class="caption-text">保存时使用的是相对路径</span></p>
+</div>
+<div class="figure" id="id14">
+<img alt="_images/eval_proj_dir_after.png" src="_images/eval_proj_dir_after.png" />
+<p class="caption"><span class="caption-text">再次打开变为绝对路径</span></p>
+</div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>保存时<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id6">
+<h3>自动摆放节点<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<p>自动整理摆放节点</p>
+<p>选择竖式的话是使用 <a class="reference internal" href="menu.html#id18"><span class="std std-ref">整理所选节点(竖式摆放)</span></a></p>
+</div>
+<div class="section" id="id7">
+<h3>锁定节点连接<a class="headerlink" href="#id7" title="永久链接至标题">¶</a></h3>
+<p>锁定节点连接, 防止误操作</p>
+<img alt="_images/lock_all_connections.png" src="_images/lock_all_connections.png" />
+<p>要取消锁定, 按S打开工程设置然后取消 <span class="guilabel">lock all connections</span> 的勾选</p>
+</div>
+<div class="section" id="id8">
+<h3>启用被标记为稍后启用的节点<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<p>启用被标记为稍后启用的节点</p>
+<p>参见<a class="reference internal" href="menu.html#id6"><span class="std std-ref">标记为稍后启用</span></a></p>
+</div>
+<div class="section" id="write">
+<h3>跳至_Write节点指定的帧<a class="headerlink" href="#write" title="永久链接至标题">¶</a></h3>
+<p>设置当前帧为<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>的指定帧</p>
+</div>
+</div>
+<div class="section" id="id9">
+<h2>保存并退出时<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h2>
+<div class="section" id="id10">
+<h3>渲染_Write节点单帧<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h3>
+<p>执行<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>的<span class="guilabel">输出单帧</span></p>
+</div>
+<div class="section" id="id11">
+<h3>发送至渲染文件夹<a class="headerlink" href="#id11" title="永久链接至标题">¶</a></h3>
+<p>将保存的文件复制一份到指定文件夹用于批渲染</p>
+</div>
+<div class="section" id="images">
+<h3>为images文件夹生成色板<a class="headerlink" href="#images" title="永久链接至标题">¶</a></h3>
+<p>自动为<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>的单帧文件夹进行<a class="reference internal" href="menu.html#id41"><span class="std std-ref">创建色板</span></a></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="menu.html">菜单</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">首选项设置</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">通用</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">制作人信息</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gizmogroup">创建Gizmo时尝试转换为Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">读取时工程目录自动转换为绝对路径</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">保存时</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">自动摆放节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7">锁定节点连接</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">启用被标记为稍后启用的节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#write">跳至_Write节点指定的帧</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">保存并退出时</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id10">渲染_Write节点单帧</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11">发送至渲染文件夹</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#images">为images文件夹生成色板</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/pref.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

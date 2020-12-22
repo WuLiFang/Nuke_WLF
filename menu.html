@@ -1,0 +1,526 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>菜单 &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="首选项设置" href="pref.html" />
+    <link rel="prev" title="正则分割图层组" href="features/shuffle_layers_by_re.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>菜单<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<div class="section" id="id2">
+<h2>编辑<a class="headerlink" href="#id2" title="永久链接至标题">¶</a></h2>
+<img alt="_images/edit_menu.png" src="_images/edit_menu.png" />
+<div class="section" id="id3">
+<span id="id4"></span><h3>同时编辑多个节点<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h3>
+<img alt="_images/multi_edit.png" src="_images/multi_edit.png" />
+<p>同时设置多个同类型节点
+常用于设置Read节点帧范围</p>
+<div class="figure" id="id46">
+<img alt="_images/multi_edit_choose.png" src="_images/multi_edit_choose.png" />
+<p class="caption"><span class="caption-text">如果选中的节点包含多个类型会要求用户选择</span></p>
+</div>
+</div>
+<div class="section" id="id5">
+<h3>分离图层<a class="headerlink" href="#id5" title="永久链接至标题">¶</a></h3>
+<img alt="_images/shuffle_layer.png" src="_images/shuffle_layer.png" />
+<p>为选中节点的每个图层(Layer)创建一个Shuffle</p>
+</div>
+<div class="section" id="rgba">
+<h3>分离rgba<a class="headerlink" href="#rgba" title="永久链接至标题">¶</a></h3>
+<img alt="_images/shuffle_rgba.png" src="_images/shuffle_rgba.png" />
+<p>为选中节点的rgba通道各创建一个shuffle</p>
+</div>
+<div class="section" id="puzzlematte">
+<h3>重命名PuzzleMatte<a class="headerlink" href="#puzzlematte" title="永久链接至标题">¶</a></h3>
+<img alt="_images/rename_channels.png" src="_images/rename_channels.png" />
+<p>为选中节点中的PuzzleMatte通道指定新的名称
+提升节点可读性</p>
+<div class="figure" id="id47">
+<img alt="_images/rename_channels_result.png" src="_images/rename_channels_result.png" />
+<p class="caption"><span class="caption-text">效果</span></p>
+</div>
+</div>
+<div class="section" id="id6">
+<span id="id7"></span><h3>标记为稍后启用<a class="headerlink" href="#id6" title="永久链接至标题">¶</a></h3>
+<p>将选中节点标为稍后启用, 用于加快预览</p>
+<p>在首选项中有相关设置使其在保存时自动重新开启</p>
+<p>可以使用 <a class="reference internal" href="#id10"><span class="std std-ref">禁用所有稍后启用节点</span></a> 来快速禁用所有</p>
+</div>
+<div class="section" id="png">
+<h3>输出当前帧png<a class="headerlink" href="#png" title="永久链接至标题">¶</a></h3>
+<p>为选中节点当前帧创建一张png</p>
+</div>
+<div class="section" id="id8">
+<h3>设置帧范围<a class="headerlink" href="#id8" title="永久链接至标题">¶</a></h3>
+<img alt="_images/set_framerange.png" src="_images/set_framerange.png" />
+<p>为选中读取节点设置帧范围</p>
+<div class="admonition tip">
+<p class="first admonition-title">小技巧</p>
+<p class="last">适用情况较限定, 推荐使用<a class="reference internal" href="#id3"><span class="std std-ref">同时编辑多个节点</span></a>代替</p>
+</div>
+</div>
+<div class="section" id="id9">
+<h3>转换为相对路径<a class="headerlink" href="#id9" title="永久链接至标题">¶</a></h3>
+<p>将选中读取节点的素材路径转为相对路径</p>
+<div class="admonition attention">
+<p class="first admonition-title">注意</p>
+<p class="last">这是从老版本插件继承的功能,尚未测试</p>
+</div>
+</div>
+<div class="section" id="id10">
+<span id="id11"></span><h3>禁用所有稍后启用节点<a class="headerlink" href="#id10" title="永久链接至标题">¶</a></h3>
+<p>将所有<a class="reference internal" href="#id6"><span class="std std-ref">标记为稍后启用</span></a>的节点禁用</p>
+</div>
+<div class="section" id="id12">
+<h3>修正读取错误<a class="headerlink" href="#id12" title="永久链接至标题">¶</a></h3>
+<div class="figure" id="id48">
+<img alt="_images/fix_error_read_before.png" src="_images/fix_error_read_before.png" />
+<p class="caption"><span class="caption-text">在有读取节点错误时先拖入正确的素材</span></p>
+</div>
+<div class="figure" id="id49">
+<img alt="_images/fix_error_read_after.png" src="_images/fix_error_read_after.png" />
+<p class="caption"><span class="caption-text">会比较文件名将报错的素材替换为同名正确的素材</span></p>
+</div>
+</div>
+<div class="section" id="reload">
+<h3>Reload所有<a class="headerlink" href="#reload" title="永久链接至标题">¶</a></h3>
+<p>一次性点击所有读取节点的Reload</p>
+</div>
+<div class="section" id="id13">
+<h3>检查缺帧<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h3>
+<p>检查所有读取节点的素材缺帧状况</p>
+<p>在Nuke打开和保存文件时会自动执行此命令</p>
+<div class="figure" id="id50">
+<img alt="_images/check_dropframes_normal.png" src="_images/check_dropframes_normal.png" />
+<p class="caption"><span class="caption-text">无素材缺帧的正常情况</span></p>
+</div>
+<div class="figure" id="id51">
+<img alt="_images/check_dropframes.png" src="_images/check_dropframes.png" />
+<p class="caption"><span class="caption-text">如果有缺帧</span></p>
+</div>
+<div class="figure" id="id52">
+<img alt="_images/check_dropframes_node.png" src="_images/check_dropframes_node.png" />
+<p class="caption"><span class="caption-text">节点上会显示</span></p>
+</div>
+<div class="figure" id="id53">
+<img alt="_images/check_dropframes_console.png" src="_images/check_dropframes_console.png" />
+<p class="caption"><span class="caption-text">错误控制台上也会显示</span></p>
+</div>
+</div>
+<div class="section" id="id14">
+<h3>检查素材更新<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h3>
+<p>比较素材修改日期和当前脚本工程文件日期</p>
+<p>在Nuke打开文件时会自动执行此命令</p>
+<div class="figure" id="id54">
+<img alt="_images/check_mtime_normal.png" src="_images/check_mtime_normal.png" />
+<p class="caption"><span class="caption-text">无素材更新的正常情况</span></p>
+</div>
+<div class="figure" id="id55">
+<img alt="_images/check_mtime.png" src="_images/check_mtime.png" />
+<p class="caption"><span class="caption-text">如果有素材更新</span></p>
+</div>
+</div>
+<div class="section" id="id15">
+<h3>转换单帧为序列<a class="headerlink" href="#id15" title="永久链接至标题">¶</a></h3>
+<p>将所有单帧的读取节点转换为序列</p>
+<img alt="_images/frame2sequence.png" src="_images/frame2sequence.png" />
+<div class="figure" id="id56">
+<img alt="_images/frame2sequence_before.png" src="_images/frame2sequence_before.png" />
+<p class="caption"><span class="caption-text">工程中需要替换成序列的单帧节点</span></p>
+</div>
+<div class="figure" id="id57">
+<img alt="_images/frame2sequence_after.png" src="_images/frame2sequence_after.png" />
+<p class="caption"><span class="caption-text">所有符合条件的节点都会被替换</span></p>
+</div>
+</div>
+<div class="section" id="id16">
+<h3>匹配抽帧<a class="headerlink" href="#id16" title="永久链接至标题">¶</a></h3>
+<p>根据为选中节点的 rgb 通道创建对应的 TimeWrap 节点用于匹配抽帧。</p>
+<p>如果每一帧都不同，则提示用户未检测到抽帧而不创建节点。</p>
+<img alt="_images/Nuke10.5_2019-11-05_16-19-39.png" src="_images/Nuke10.5_2019-11-05_16-19-39.png" />
+<p>对话框选项:</p>
+<p>起始帧</p>
+<blockquote>
+<div>匹配起始帧</div></blockquote>
+<p>结束帧</p>
+<blockquote>
+<div>匹配结束帧</div></blockquote>
+<p>阈值</p>
+<blockquote>
+<div>匹配阈值，0 到 1。 rgb 亮度变化平均值大于阈值算作帧有变化。</div></blockquote>
+<div class="figure" id="id58">
+<img alt="_images/Nuke10.5_2019-11-05_16-24-22.png" src="_images/Nuke10.5_2019-11-05_16-24-22.png" />
+<p class="caption"><span class="caption-text">匹配结果</span></p>
+</div>
+</div>
+</div>
+<div class="section" id="id17">
+<h2>编辑/整理<a class="headerlink" href="#id17" title="永久链接至标题">¶</a></h2>
+<p>用于整理节点</p>
+<div class="section" id="id18">
+<span id="id19"></span><h3>整理所选节点(竖式摆放)<a class="headerlink" href="#id18" title="永久链接至标题">¶</a></h3>
+<p>比原生自动摆放方法效果更好的竖式自动摆放</p>
+<div class="figure" id="id59">
+<img alt="_images/orgnize_before.png" src="_images/orgnize_before.png" />
+<p class="caption"><span class="caption-text">整理前</span></p>
+</div>
+<div class="figure" id="id60">
+<img alt="_images/orgnize_after.png" src="_images/orgnize_after.png" />
+<p class="caption"><span class="caption-text">整理后</span></p>
+</div>
+</div>
+<div class="section" id="id20">
+<h3>清理无用节点<a class="headerlink" href="#id20" title="永久链接至标题">¶</a></h3>
+<p>删除未被写入节点使用的节点</p>
+<div class="figure" id="id61">
+<img alt="_images/delete_unused_before.png" src="_images/delete_unused_before.png" />
+<p class="caption"><span class="caption-text">清理前</span></p>
+</div>
+<img alt="_images/delete_unused_after.png" src="_images/delete_unused_after.png" />
+<div class="figure" id="id62">
+<img alt="_images/delete_unused_after_2.png" src="_images/delete_unused_after_2.png" />
+<p class="caption"><span class="caption-text">清理后</span></p>
+</div>
+</div>
+<div class="section" id="gizmogroup">
+<h3>所有Gizmo转Group<a class="headerlink" href="#gizmogroup" title="永久链接至标题">¶</a></h3>
+<p>交付给雾插件环境前对脚本使用此命令以脱离插件依赖</p>
+</div>
+<div class="section" id="id21">
+<h3>根据背板重命名所有节点<a class="headerlink" href="#id21" title="永久链接至标题">¶</a></h3>
+<p>通过背板对节点批量命名</p>
+<div class="figure" id="id63">
+<img alt="_images/rename_by_backdrop_before.png" src="_images/rename_by_backdrop_before.png" />
+<p class="caption"><span class="caption-text">命名前</span></p>
+</div>
+<div class="figure" id="id64">
+<img alt="_images/rename_by_backdrop_after.png" src="_images/rename_by_backdrop_after.png" />
+<p class="caption"><span class="caption-text">命名后</span></p>
+</div>
+</div>
+<div class="section" id="dots90">
+<span id="id22"></span><h3>节点添加Dots变成90度<a class="headerlink" href="#dots90" title="永久链接至标题">¶</a></h3>
+<div class="figure" id="id65">
+<img alt="_images/add_dot_to_90_before.png" src="_images/add_dot_to_90_before.png" />
+<p class="caption"><span class="caption-text">执行前</span></p>
+</div>
+<div class="figure" id="id66">
+<img alt="_images/add_dot_to_90_after.png" src="_images/add_dot_to_90_after.png" />
+<p class="caption"><span class="caption-text">执行后</span></p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">这是一个实验性功能</p>
+</div>
+</div>
+<div class="section" id="id23">
+<h3>所有节点添加Dots变成90度<a class="headerlink" href="#id23" title="永久链接至标题">¶</a></h3>
+<p>对所有节点执行 <a class="reference internal" href="#dots90"><span class="std std-ref">节点添加Dots变成90度</span></a></p>
+</div>
+</div>
+<div class="section" id="id24">
+<h2>合成<a class="headerlink" href="#id24" title="永久链接至标题">¶</a></h2>
+<div class="section" id="comp-icon">
+<span id="id25"></span><h3><img alt="comp_icon" src="_images/comp_icon.png" /> 自动合成<a class="headerlink" href="#comp-icon" title="永久链接至标题">¶</a></h3>
+<p>自动合成当前导入的素材</p>
+<ol class="arabic">
+<li><div class="first figure" id="id67">
+<img alt="_images/comp_prepare.png" src="_images/comp_prepare.png" />
+<p class="caption"><span class="caption-text">导入素材</span></p>
+</div>
+</li>
+<li><div class="first figure" id="id68">
+<img alt="_images/comp_run.png" src="_images/comp_run.png" />
+<p class="caption"><span class="caption-text">执行</span></p>
+</div>
+</li>
+<li><div class="first figure" id="id69">
+<img alt="_images/comp_result.png" src="_images/comp_result.png" />
+<p class="caption"><span class="caption-text">结果</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="id26">
+<span id="id27"></span><h3><img alt="comp_icon" src="_images/comp_icon.png" /> 自动合成设置<a class="headerlink" href="#id26" title="永久链接至标题">¶</a></h3>
+<img alt="_images/comp_setting.png" src="_images/comp_setting.png" />
+<p>对 <a class="reference internal" href="#id25"><span class="std std-ref"> 自动合成</span></a> 进行设置。</p>
+</div>
+<div class="section" id="redshift">
+<h3>Redshift 预合成<a class="headerlink" href="#redshift" title="永久链接至标题">¶</a></h3>
+<p>将选中的Redshift素材节点进行分层预合成</p>
+<div class="figure" id="id70">
+<img alt="_images/precomp_redshift.png" src="_images/precomp_redshift.png" />
+<p class="caption"><span class="caption-text">一键搭建所需框架</span></p>
+</div>
+</div>
+<div class="section" id="arnold">
+<h3>Arnold 预合成<a class="headerlink" href="#arnold" title="永久链接至标题">¶</a></h3>
+<p>将选中的 Arnold 素材节点进行分层预合成</p>
+<div class="figure" id="id71">
+<img alt="_images/precomp_arnold.png" src="_images/precomp_arnold.png" />
+<p class="caption"><span class="caption-text">一键搭建所需框架</span></p>
+</div>
+</div>
+<div class="section" id="id28">
+<h3>自动预合成<a class="headerlink" href="#id28" title="永久链接至标题">¶</a></h3>
+<p>根据分层检测使用的素材类型，并使用对应的预合成。</p>
+<p>支持：</p>
+<ul class="simple">
+<li>RedShift</li>
+<li>Arnold</li>
+</ul>
+</div>
+</div>
+<div class="section" id="cgteamwork-icon-cgteamwork">
+<h2><img alt="cgteamwork_icon" src="_images/cgteamwork_icon.png" /> CGTeamWork<a class="headerlink" href="#cgteamwork-icon-cgteamwork" title="永久链接至标题">¶</a></h2>
+<img alt="_images/cgtw_menu.png" src="_images/cgtw_menu.png" />
+<p>此菜单只在安装了CGTeamWork之后才会出现</p>
+<div class="section" id="id29">
+<h3>登录<a class="headerlink" href="#id29" title="永久链接至标题">¶</a></h3>
+<img alt="_images/cgtw_login.png" src="_images/cgtw_login.png" />
+<p>用于自动登录失效时临时进行手动登录, 推荐之后重开Nuke和CGTeamWork使用自动登录</p>
+</div>
+<div class="section" id="note">
+<h3>添加note<a class="headerlink" href="#note" title="永久链接至标题">¶</a></h3>
+<img alt="_images/cgtw_note.png" src="_images/cgtw_note.png" />
+<p>为CGTeamWork上的对应镜头添加备注</p>
+</div>
+<div class="section" id="id30">
+<h3>提交单帧<a class="headerlink" href="#id30" title="永久链接至标题">¶</a></h3>
+<p>将<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>节点输出的单帧提交</p>
+<div class="admonition warning">
+<p class="first admonition-title">警告</p>
+<p class="last">正规的提交不应该是单帧应是mov</p>
+</div>
+</div>
+<div class="section" id="id31">
+<h3>提交视频<a class="headerlink" href="#id31" title="永久链接至标题">¶</a></h3>
+<p>将<a class="reference internal" href="plug-ins/Image.html#wlf-write"><span class="std std-ref">wlf_Write</span></a>节点输出的视频提交</p>
+</div>
+<div class="section" id="id32">
+<span id="id33"></span><h3>创建项目色板<a class="headerlink" href="#id32" title="永久链接至标题">¶</a></h3>
+<img alt="_images/cgtw_csheet.png" src="_images/cgtw_csheet.png" />
+<p>为项目创建色板</p>
+<p>此功能在CGTeamWork右键菜单中也能访问</p>
+</div>
+<div class="section" id="id34">
+<h3>创建项目文件夹<a class="headerlink" href="#id34" title="永久链接至标题">¶</a></h3>
+<img alt="_images/cgtw_dir_creation.png" src="_images/cgtw_dir_creation.png" />
+<p>为项目中的每个匹配镜头建立一个空文件夹</p>
+</div>
+</div>
+<div class="section" id="id35">
+<h2>帮助<a class="headerlink" href="#id35" title="永久链接至标题">¶</a></h2>
+<img alt="_images/help_menu.png" src="_images/help_menu.png" />
+<div class="section" id="id36">
+<h3>吾立方插件 文档<a class="headerlink" href="#id36" title="永久链接至标题">¶</a></h3>
+<p>本文档的入口</p>
+</div>
+<div class="section" id="id37">
+<h3>吾立方网站<a class="headerlink" href="#id37" title="永久链接至标题">¶</a></h3>
+<p>公司官网</p>
+</div>
+</div>
+<div class="section" id="id38">
+<h2>工具<a class="headerlink" href="#id38" title="永久链接至标题">¶</a></h2>
+<img alt="_images/tool_menu.png" src="_images/tool_menu.png" />
+<p>每次使用前带需要设置的操作</p>
+<div class="section" id="id39">
+<span id="id40"></span><h3><img alt="comp_icon" src="_images/comp_icon.png" /> 批量自动合成<a class="headerlink" href="#id39" title="永久链接至标题">¶</a></h3>
+<img alt="_images/batchcomp.png" src="_images/batchcomp.png" />
+<p>合成/自动合成的批量版本
+直接自动合成大量镜头</p>
+<img alt="_images/batchcomp_run.png" src="_images/batchcomp_run.png" />
+<p>使用多线程, 内存不足时会等待足够的空闲内存再继续。</p>
+<div class="figure" id="id72">
+<img alt="_images/batchcomp_result.png" src="_images/batchcomp_result.png" />
+<p class="caption"><span class="caption-text">批量合成日志</span></p>
+</div>
+</div>
+<div class="section" id="id41">
+<span id="id42"></span><h3>创建色板<a class="headerlink" href="#id41" title="永久链接至标题">¶</a></h3>
+<p>为一个文件夹中的图像文件(.jpg, .png, .jpeg)创建html色板</p>
+</div>
+<div class="section" id="mov">
+<span id="id43"></span><h3>上传mov<a class="headerlink" href="#mov" title="永久链接至标题">¶</a></h3>
+<img alt="_images/uploader.png" src="_images/uploader.png" />
+<p>上传工作成果至服务器或CGTeamWork</p>
+</div>
+<div class="section" id="id44">
+<h3>扫描空文件夹<a class="headerlink" href="#id44" title="永久链接至标题">¶</a></h3>
+<img alt="_images/scanner.png" src="_images/scanner.png" />
+<p>用于快速找出无素材的镜头</p>
+</div>
+<div class="section" id="exr">
+<h3>分离exr<a class="headerlink" href="#exr" title="永久链接至标题">¶</a></h3>
+<img alt="_images/split_exr.png" src="_images/split_exr.png" />
+<p>把多层的exr文件分成多个单层的exr文件</p>
+</div>
+<div class="section" id="id45">
+<h3>分割当前文件(根据背板)<a class="headerlink" href="#id45" title="永久链接至标题">¶</a></h3>
+<img alt="_images/split_by_backdrop.png" src="_images/split_by_backdrop.png" />
+<p>把多包含多个镜头的文件根据背板(Backdrop)分离成多个单镜头的文件</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">功能</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">菜单</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">编辑</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">同时编辑多个节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">分离图层</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rgba">分离rgba</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#puzzlematte">重命名PuzzleMatte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">标记为稍后启用</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#png">输出当前帧png</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8">设置帧范围</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">转换为相对路径</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">禁用所有稍后启用节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12">修正读取错误</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reload">Reload所有</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13">检查缺帧</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">检查素材更新</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id15">转换单帧为序列</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id16">匹配抽帧</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">编辑/整理</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id18">整理所选节点(竖式摆放)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id20">清理无用节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gizmogroup">所有Gizmo转Group</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id21">根据背板重命名所有节点</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dots90">节点添加Dots变成90度</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id23">所有节点添加Dots变成90度</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id24">合成</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#comp-icon"> 自动合成</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id26"> 自动合成设置</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#redshift">Redshift 预合成</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arnold">Arnold 预合成</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id28">自动预合成</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cgteamwork-icon-cgteamwork"> CGTeamWork</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id29">登录</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#note">添加note</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id30">提交单帧</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id31">提交视频</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id32">创建项目色板</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id34">创建项目文件夹</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id35">帮助</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id36">吾立方插件 文档</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id37">吾立方网站</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id38">工具</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id39"> 批量自动合成</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id41">创建色板</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mov">上传mov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id44">扫描空文件夹</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exr">分离exr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id45">分割当前文件(根据背板)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/menu.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,29 @@
+3D
+=======
+通道处理节点
+
+|ProjectionMP_icon| ProjectionMP
+---------------------------------------
+
+.. image:: /_images/ProjectionMP_node.png
+
+快速投射MattePainting
+
+控制
+****************
+
+.. image:: /_images/ProjectionMP_panel.png
+
+SphereMP
+--------------------------------------
+
+.. image:: /_images/SphereMP_node.png
+
+快速球体MattePainting
+
+控制
+****************
+
+.. image:: /_images/SphereMP_panel.png
+
+.. |ProjectionMP_icon| image:: /_images/ProjectionMP_icon.png

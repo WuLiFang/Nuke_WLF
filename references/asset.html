@@ -1,0 +1,418 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>asset &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="callback" href="callback.html" />
+    <link rel="prev" title="编程参考" href="../reference.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="asset">
+<h1>asset<a class="headerlink" href="#asset" title="永久链接至标题">¶</a></h1>
+<p>此模块用于 资产的使用和检查</p>
+<div class="section" id="module-asset.autofix">
+<span id="autofix"></span><h2>autofix<a class="headerlink" href="#module-asset.autofix" title="永久链接至标题">¶</a></h2>
+<p>Auto fix wrong nodes.</p>
+<dl class="function">
+<dt id="asset.autofix.fix_read">
+<code class="descclassname">asset.autofix.</code><code class="descname">fix_read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/autofix.html#fix_read"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.autofix.fix_read" title="永久链接至目标">¶</a></dt>
+<dd><p>Try fix all nodes that has filename error.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.comp">
+<span id="comp"></span><h2>comp<a class="headerlink" href="#module-asset.comp" title="永久链接至标题">¶</a></h2>
+<p>Comp script file.</p>
+<dl class="function">
+<dt id="asset.comp.sent_to_dir">
+<code class="descclassname">asset.comp.</code><code class="descname">sent_to_dir</code><span class="sig-paren">(</span><em>dir_</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/comp.html#sent_to_dir"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.comp.sent_to_dir" title="永久链接至目标">¶</a></dt>
+<dd><p>Send current working file to dir.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.core">
+<span id="core"></span><h2>core<a class="headerlink" href="#module-asset.core" title="永久链接至标题">¶</a></h2>
+<p>Deal with assets and files in nuke.</p>
+</div>
+<div class="section" id="module-asset.footage">
+<span id="footage"></span><h2>footage<a class="headerlink" href="#module-asset.footage" title="永久链接至标题">¶</a></h2>
+<p>Footage asset.</p>
+<dl class="class">
+<dt id="asset.footage.Footage">
+<em class="property">class </em><code class="descclassname">asset.footage.</code><code class="descname">Footage</code><span class="sig-paren">(</span><em>filename</em>, <em>frame_ranges=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/footage.html#Footage"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.footage.Footage" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Asset for nuke node.</p>
+<dl class="classmethod">
+<dt id="asset.footage.Footage.filename_factory">
+<em class="property">classmethod </em><code class="descname">filename_factory</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/footage.html#Footage.filename_factory"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.footage.Footage.filename_factory" title="永久链接至目标">¶</a></dt>
+<dd><p>get filename from a object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>obj</strong> (<em>str</em><em> or </em><em>unicode</em><em> or </em><em>nuke.Node</em>) – Object contain filename.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回:</th><td class="field-body">filename path.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">返回类型:</th><td class="field-body">wlf.path.Path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asset.footage.Footage.missing_frames">
+<code class="descname">missing_frames</code><span class="sig-paren">(</span><em>frame_ranges=None</em>, <em>timeout=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/footage.html#Footage.missing_frames"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.footage.Footage.missing_frames" title="永久链接至目标">¶</a></dt>
+<dd><p>Get missing frame ranges compare to frame_list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>(</strong><strong>Iterable</strong><strong>[</strong><strong>int</strong><strong>]</strong> (<em>frame_list</em>) – or nuke.Node
+or nuke.FrameRanges, optional): Defaults to None.
+check file exsits with these frames,
+None mean return whole missing frame ranges.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回:</th><td class="field-body"><dl class="docutils">
+<dt>missing frame ranges,</dt>
+<dd>None means result not ready.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">返回类型:</th><td class="field-body">Optional[<a class="reference internal" href="#asset.frameranges.FrameRanges" title="asset.frameranges.FrameRanges">FrameRanges</a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.frameranges">
+<span id="frameranges"></span><h2>frameranges<a class="headerlink" href="#module-asset.frameranges" title="永久链接至标题">¶</a></h2>
+<p>Frame ranges.</p>
+<dl class="class">
+<dt id="asset.frameranges.FrameRanges">
+<em class="property">class </em><code class="descclassname">asset.frameranges.</code><code class="descname">FrameRanges</code><span class="sig-paren">(</span><em>obj=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrap a object for get nuke.FrameRanges.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><strong>obj</strong> (<em>any</em>) – Object contains frame_ranges.
+will use nuke.Root() instead when object is not support.</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="asset.frameranges.FrameRanges.from_node">
+<em class="property">classmethod </em><code class="descname">from_node</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges.from_node"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges.from_node" title="永久链接至目标">¶</a></dt>
+<dd><p>Get node frame ranges.
+(static result, init if need dynamic link.)</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="asset.frameranges.FrameRanges.from_path">
+<em class="property">classmethod </em><code class="descname">from_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges.from_path"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges.from_path" title="永久链接至目标">¶</a></dt>
+<dd><p>“Get frame ranges from path.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="asset.frameranges.FrameRanges.from_root">
+<em class="property">classmethod </em><code class="descname">from_root</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges.from_root"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges.from_root" title="永久链接至目标">¶</a></dt>
+<dd><p>Get root frame ranges.
+(static result, init if need dynamic link.)</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="asset.frameranges.FrameRanges.from_text">
+<em class="property">classmethod </em><code class="descname">from_text</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges.from_text"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges.from_text" title="永久链接至目标">¶</a></dt>
+<dd><p>“Get frame ranges from text.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="asset.frameranges.FrameRanges.to_frame_list">
+<code class="descname">to_frame_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/frameranges.html#FrameRanges.to_frame_list"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.frameranges.FrameRanges.to_frame_list" title="永久链接至目标">¶</a></dt>
+<dd><p>nuke.FrameRanges will returns None if no frame in it.
+this will return a empty list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">返回:</th><td class="field-body">Frame list in this frame ranges.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="asset.frameranges.FrameRanges.wrapped">
+<code class="descname">wrapped</code><a class="headerlink" href="#asset.frameranges.FrameRanges.wrapped" title="永久链接至目标">¶</a></dt>
+<dd><p>Get frame range from wrapped object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.localization">
+<span id="localization"></span><h2>localization<a class="headerlink" href="#module-asset.localization" title="永久链接至标题">¶</a></h2>
+<p>Modify nuke localization functionality.</p>
+<dl class="function">
+<dt id="asset.localization.is_support_localization">
+<code class="descclassname">asset.localization.</code><code class="descname">is_support_localization</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/localization.html#is_support_localization"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.localization.is_support_localization" title="永久链接至目标">¶</a></dt>
+<dd><p>Return is nuke supported localization feature.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="asset.localization.need_localization_support">
+<code class="descclassname">asset.localization.</code><code class="descname">need_localization_support</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/localization.html#need_localization_support"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.localization.need_localization_support" title="永久链接至目标">¶</a></dt>
+<dd><p>Decorator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="asset.localization.update">
+<code class="descclassname">asset.localization.</code><code class="descname">update</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/localization.html#update"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.localization.update" title="永久链接至目标">¶</a></dt>
+<dd><p>Update localized files</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.model">
+<span id="model"></span><h2>model<a class="headerlink" href="#module-asset.model" title="永久链接至标题">¶</a></h2>
+<p>Data models.</p>
+<dl class="class">
+<dt id="asset.model.MissingFramesDict">
+<em class="property">class </em><code class="descclassname">asset.model.</code><code class="descname">MissingFramesDict</code><a class="reference internal" href="../_modules/asset/model.html#MissingFramesDict"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.model.MissingFramesDict" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></p>
+<p>Missing frames data.</p>
+<dl class="method">
+<dt id="asset.model.MissingFramesDict.as_html">
+<code class="descname">as_html</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/model.html#MissingFramesDict.as_html"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.model.MissingFramesDict.as_html" title="永久链接至目标">¶</a></dt>
+<dd><p>Convert the data to html page.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.monitor">
+<span id="monitor"></span><h2>monitor<a class="headerlink" href="#module-asset.monitor" title="永久链接至标题">¶</a></h2>
+<p>Footage monitor.</p>
+<dl class="class">
+<dt id="asset.monitor.FootagesMonitor">
+<em class="property">class </em><code class="descclassname">asset.monitor.</code><code class="descname">FootagesMonitor</code><span class="sig-paren">(</span><em>obj</em>, <em>is_strict=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/monitor.html#FootagesMonitor"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.monitor.FootagesMonitor" title="永久链接至目标">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<p>Multiple Asset. Get assets from a obj.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">参数:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>Assets supported types</em>) – object may contain multiple assets.</li>
+<li><strong>is_strict</strong> (<em>bool</em>) – Defaults to False, strict mode switch.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – when <cite>is_strict</cite> is True and can not get assets from <cite>obj</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">返回:</th><td class="field-body"><p class="first">List of asset in <cite>obj</cite>, or all_assets as default.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body"><p class="first last">list[Asset]</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="asset.monitor.FootagesMonitor.all">
+<em class="property">classmethod </em><code class="descname">all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/monitor.html#FootagesMonitor.all"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.monitor.FootagesMonitor.all" title="永久链接至目标">¶</a></dt>
+<dd><p>Get all assets current using.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">返回:</th><td class="field-body">current assets.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body">Assets</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="asset.monitor.FootagesMonitor.missing_frames_dict">
+<code class="descname">missing_frames_dict</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/monitor.html#FootagesMonitor.missing_frames_dict"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.monitor.FootagesMonitor.missing_frames_dict" title="永久链接至目标">¶</a></dt>
+<dd><p>Get missing_frames from assets.</p>
+<dl class="docutils">
+<dt>Decorators:</dt>
+<dd>run_with_clock</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">返回:</th><td class="field-body">Dict of (asset, missing_frames) pair.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">返回类型:</th><td class="field-body">DropFramesDict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.notify">
+<span id="notify"></span><h2>notify<a class="headerlink" href="#module-asset.notify" title="永久链接至标题">¶</a></h2>
+<p>Asset notify.</p>
+<dl class="function">
+<dt id="asset.notify.reset_warning_history">
+<code class="descclassname">asset.notify.</code><code class="descname">reset_warning_history</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/notify.html#reset_warning_history"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.notify.reset_warning_history" title="永久链接至目标">¶</a></dt>
+<dd><p>Forget showed warning.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="asset.notify.throtted_warning">
+<code class="descclassname">asset.notify.</code><code class="descname">throtted_warning</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/notify.html#throtted_warning"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.notify.throtted_warning" title="永久链接至目标">¶</a></dt>
+<dd><p>Only show each warning message once.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="asset.notify.warn_missing_frames">
+<code class="descclassname">asset.notify.</code><code class="descname">warn_missing_frames</code><span class="sig-paren">(</span><em>assets=None</em>, <em>show_ok=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/notify.html#warn_missing_frames"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.notify.warn_missing_frames" title="永久链接至目标">¶</a></dt>
+<dd><p>Show missing frames to user
+:param assets: Defaults to None.
+:type assets: any, optional
+:param object contains assets, None mean all Assets.:
+:param show_ok: Defaults to False.
+:type show_ok: bool, optional
+:param If show message for no missing frames.:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="asset.notify.warn_mtime">
+<code class="descclassname">asset.notify.</code><code class="descname">warn_mtime</code><span class="sig-paren">(</span><em>show_ok=False</em>, <em>since=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/asset/notify.html#warn_mtime"><span class="viewcode-link">[源代码]</span></a><a class="headerlink" href="#asset.notify.warn_mtime" title="永久链接至目标">¶</a></dt>
+<dd><p>Show footage that mtime newer than script mtime.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-asset.util">
+<span id="util"></span><h2>util<a class="headerlink" href="#module-asset.util" title="永久链接至标题">¶</a></h2>
+<p>Asset utility.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../re.html">正则表达式</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">编程参考</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#id2">索引</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">asset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="callback.html">callback</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cgtwn.html">cgtwn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="comp.html">comp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dropdata.html">dropdata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="edit.html">edit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="node.html">node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="orgnize.html">orgnize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="panels.html">panels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pref.html">pref</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/references/asset.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,197 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>asset.monitor &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>asset.monitor 源代码</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding=UTF-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Footage monitor.  &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span>
+                        <span class="n">unicode_literals</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing.dummy</span> <span class="kn">import</span> <span class="n">Pool</span>
+
+<span class="kn">import</span> <span class="nn">nuke</span>
+
+<span class="kn">from</span> <span class="nn">wlf.codectools</span> <span class="kn">import</span> <span class="n">get_encoded</span> <span class="k">as</span> <span class="n">e</span>
+<span class="kn">from</span> <span class="nn">wlf.codectools</span> <span class="kn">import</span> <span class="n">get_unicode</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">wlf.decorators</span> <span class="kn">import</span> <span class="n">run_with_clock</span>
+
+<span class="kn">from</span> <span class="nn">.footage</span> <span class="kn">import</span> <span class="n">Footage</span>
+<span class="kn">from</span> <span class="nn">.model</span> <span class="kn">import</span> <span class="n">MissingFramesDict</span>
+
+
+<div class="viewcode-block" id="FootagesMonitor"><a class="viewcode-back" href="../../references/asset.html#asset.monitor.FootagesMonitor">[文档]</a><span class="k">class</span> <span class="nc">FootagesMonitor</span><span class="p">(</span><span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Multiple Asset. Get assets from a obj.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obj (Assets supported types): object may contain multiple assets.</span>
+<span class="sd">        is_strict (bool) : Defaults to False, strict mode switch.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: when `is_strict` is True and can not get assets from `obj`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[Asset]: List of asset in `obj`, or all_assets as default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">is_strict</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">FootagesMonitor</span><span class="p">):</span>
+            <span class="n">list_</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">list_</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">Footage</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">list_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Footage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">is_strict</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Not supported type.&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+                    <span class="n">list_</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FootagesMonitor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">list_</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__unicode__</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">u</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+
+<div class="viewcode-block" id="FootagesMonitor.all"><a class="viewcode-back" href="../../references/asset.html#asset.monitor.FootagesMonitor.all">[文档]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all assets current using.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Assets: current assets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">(</span><span class="s1">&#39;Read&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="FootagesMonitor.missing_frames_dict"><a class="viewcode-back" href="../../references/asset.html#asset.monitor.FootagesMonitor.missing_frames_dict">[文档]</a>    <span class="nd">@run_with_clock</span><span class="p">(</span><span class="s1">&#39;检查缺帧&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">missing_frames_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get missing_frames from assets.</span>
+
+<span class="sd">        Decorators:</span>
+<span class="sd">            run_with_clock</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DropFramesDict: Dict of (asset, missing_frames) pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">MissingFramesDict</span><span class="p">()</span>
+
+        <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="n">asset</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">Footage</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">missing_frames</span> <span class="o">=</span> <span class="n">asset</span><span class="o">.</span><span class="n">missing_frames</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">missing_frames</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">:</span>
+                        <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">missing_frames</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">missing_frames</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="kn">import</span> <span class="nn">traceback</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">_run</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

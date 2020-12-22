@@ -1,0 +1,233 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>asset.notify &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>asset.notify 源代码</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding=UTF-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Asset notify.  &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span>
+                        <span class="n">unicode_literals</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">webbrowser</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">mkstemp</span>
+
+<span class="kn">import</span> <span class="nn">nuke</span>
+<span class="kn">import</span> <span class="nn">pendulum</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
+
+<span class="kn">import</span> <span class="nn">callback</span>
+<span class="kn">from</span> <span class="nn">executor</span> <span class="kn">import</span> <span class="n">EXECUTOR</span>
+<span class="kn">from</span> <span class="nn">nuketools</span> <span class="kn">import</span> <span class="n">utf8</span>
+<span class="kn">from</span> <span class="nn">wlf.codectools</span> <span class="kn">import</span> <span class="n">get_encoded</span> <span class="k">as</span> <span class="n">e</span>
+<span class="kn">from</span> <span class="nn">wlf.codectools</span> <span class="kn">import</span> <span class="n">get_unicode</span> <span class="k">as</span> <span class="n">u</span>
+<span class="kn">from</span> <span class="nn">wlf.decorators</span> <span class="kn">import</span> <span class="n">run_with_clock</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">.monitor</span> <span class="kn">import</span> <span class="n">FootagesMonitor</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="warn_missing_frames"><a class="viewcode-back" href="../../references/asset.html#asset.notify.warn_missing_frames">[文档]</a><span class="k">def</span> <span class="nf">warn_missing_frames</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Show missing frames to user</span>
+<span class="sd">        Args:</span>
+<span class="sd">            assets (any, optional): Defaults to None.</span>
+<span class="sd">            object contains assets, None mean all Assets.</span>
+<span class="sd">            show_ok (bool, optional): Defaults to False.</span>
+<span class="sd">            If show message for no missing frames.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">assets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">assets</span> <span class="o">=</span> <span class="n">FootagesMonitor</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assets</span> <span class="o">=</span> <span class="n">FootagesMonitor</span><span class="p">(</span><span class="n">assets</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">assets</span><span class="o">.</span><span class="n">missing_frames_dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_ok</span><span class="p">:</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="s1">&#39;没有发现缺帧素材&#39;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">nuke</span><span class="o">.</span><span class="n">GUI</span><span class="p">:</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">as_html</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Use html to display.</span>
+        <span class="n">fd</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">(</span><span class="s1">&#39;.html&#39;</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">as_html</span><span class="p">())</span>
+        <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+<span class="n">SHOWED_WARNING</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<div class="viewcode-block" id="throtted_warning"><a class="viewcode-back" href="../../references/asset.html#asset.notify.throtted_warning">[文档]</a><span class="k">def</span> <span class="nf">throtted_warning</span><span class="p">(</span><span class="n">msg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Only show each warning message once.  &quot;&quot;&quot;</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">u</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">msg</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SHOWED_WARNING</span><span class="p">:</span>
+        <span class="n">nuke</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span>
+        <span class="n">SHOWED_WARNING</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="reset_warning_history"><a class="viewcode-back" href="../../references/asset.html#asset.notify.reset_warning_history">[文档]</a><span class="k">def</span> <span class="nf">reset_warning_history</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Forget showed warning.  &quot;&quot;&quot;</span>
+
+    <span class="k">del</span> <span class="n">SHOWED_WARNING</span><span class="p">[:]</span></div>
+
+
+<div class="viewcode-block" id="warn_mtime"><a class="viewcode-back" href="../../references/asset.html#asset.notify.warn_mtime">[文档]</a><span class="k">def</span> <span class="nf">warn_mtime</span><span class="p">(</span><span class="n">show_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">since</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Show footage that mtime newer than script mtime. &quot;&quot;&quot;</span>
+
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Check warn_mtime&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">script_name</span> <span class="o">=</span> <span class="n">nuke</span><span class="o">.</span><span class="n">scriptName</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">show_ok</span><span class="p">:</span>
+            <span class="n">nuke</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="s1">&#39;文件未保存&#39;</span><span class="p">))</span>
+        <span class="k">return</span>
+    <span class="n">script_mtime</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="n">e</span><span class="p">(</span><span class="n">script_name</span><span class="p">))</span>
+    <span class="n">since</span> <span class="o">=</span> <span class="n">since</span> <span class="ow">or</span> <span class="n">script_mtime</span>
+
+    <span class="nd">@run_with_clock</span><span class="p">(</span><span class="s1">&#39;检查素材修改日期&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_mtime_info</span><span class="p">():</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nuke</span><span class="o">.</span><span class="n">allNodes</span><span class="p">(</span><span class="s1">&#39;Read&#39;</span><span class="p">,</span> <span class="n">nuke</span><span class="o">.</span><span class="n">Root</span><span class="p">()):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mtime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+                    <span class="n">n</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="s1">&#39;input/mtime&#39;</span><span class="p">),</span> <span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">mtime</span> <span class="o">&gt;</span> <span class="n">since</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">nuke</span><span class="o">.</span><span class="n">filename</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span> <span class="o">=</span> <span class="n">mtime</span>
+                <span class="n">ftime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">localtime</span><span class="p">(</span><span class="n">mtime</span><span class="p">))</span>
+                <span class="n">throtted_warning</span><span class="p">(</span>
+                    <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: [new footage]</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">()),</span> <span class="n">ftime</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="n">newer_footages</span> <span class="o">=</span> <span class="n">_get_mtime_info</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">show_ok</span> <span class="ow">or</span> <span class="n">newer_footages</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="n">env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">core</span><span class="o">.</span><span class="n">TEMPLATES_DIR</span><span class="p">))</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s1">&#39;mtime.html&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">pendulum</span><span class="o">.</span><span class="n">from_timestamp</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">diff_for_humans</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">newer_footages</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">script_name</span><span class="o">=</span><span class="n">script_name</span><span class="p">,</span>
+                          <span class="n">script_mtime</span><span class="o">=</span><span class="n">pendulum</span><span class="o">.</span><span class="n">from_timestamp</span><span class="p">(</span>
+                              <span class="n">script_mtime</span><span class="p">)</span><span class="o">.</span><span class="n">diff_for_humans</span><span class="p">(),</span>
+                          <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">nuke</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">utf8</span><span class="p">(</span><span class="n">msg</span><span class="p">))</span></div>
+
+<span class="k">def</span> <span class="nf">setup</span><span class="p">():</span>
+    <span class="n">pendulum</span><span class="o">.</span><span class="n">set_locale</span><span class="p">(</span><span class="s1">&#39;zh&#39;</span><span class="p">)</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_LOAD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reset_warning_history</span><span class="p">)</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_LOAD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">warn_missing_frames</span><span class="p">)</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_LOAD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">warn_mtime</span><span class="p">)</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_SAVE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">warn_missing_frames</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

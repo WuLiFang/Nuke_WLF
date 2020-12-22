@@ -1,0 +1,153 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>asset.localization &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="搜索" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>asset.localization 源代码</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding=UTF-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Modify nuke localization functionality.  &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="p">(</span><span class="n">absolute_import</span><span class="p">,</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span>
+                        <span class="n">unicode_literals</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+
+<span class="kn">import</span> <span class="nn">nuke</span>
+
+<span class="kn">import</span> <span class="nn">callback</span>
+
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="is_support_localization"><a class="viewcode-back" href="../../references/asset.html#asset.localization.is_support_localization">[文档]</a><span class="k">def</span> <span class="nf">is_support_localization</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return is nuke supported localization feature.  &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">nuke</span><span class="o">.</span><span class="n">env</span><span class="p">[</span><span class="s1">&#39;NukeVersionMajor&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">10</span></div>
+
+
+<div class="viewcode-block" id="need_localization_support"><a class="viewcode-back" href="../../references/asset.html#asset.localization.need_localization_support">[文档]</a><span class="k">def</span> <span class="nf">need_localization_support</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator.  &quot;&quot;&quot;</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_support_localization</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_func</span></div>
+
+
+<div class="viewcode-block" id="update"><a class="viewcode-back" href="../../references/asset.html#asset.localization.update">[文档]</a><span class="nd">@need_localization_support</span>
+<span class="k">def</span> <span class="nf">update</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Update localized files&quot;&quot;&quot;</span>
+
+    <span class="n">LOGGER</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;清理素材缓存&#39;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">nuke.localization</span> <span class="k">as</span> <span class="nn">l10n</span>
+    <span class="n">l10n</span><span class="o">.</span><span class="n">clearUnusedFiles</span><span class="p">()</span>
+    <span class="n">l10n</span><span class="o">.</span><span class="n">pauseLocalization</span><span class="p">()</span>
+    <span class="n">l10n</span><span class="o">.</span><span class="n">forceUpdateAll</span><span class="p">()</span>
+    <span class="n">l10n</span><span class="o">.</span><span class="n">setAlwaysUseSourceFiles</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">setup</span><span class="p">():</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nuke</span><span class="o">.</span><span class="n">GUI</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_support_localization</span><span class="p">():</span>
+        <span class="k">return</span>
+    <span class="n">callback</span><span class="o">.</span><span class="n">CALLBACKS_ON_SCRIPT_LOAD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">update</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">开发</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../re.html">正则表达式</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

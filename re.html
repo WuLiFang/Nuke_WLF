@@ -1,0 +1,232 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh_cn">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>正则表达式 &#8212; 吾立方插件 0.20.10 文档</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="索引" href="genindex.html" />
+    <link rel="search" title="搜索" href="search.html" />
+    <link rel="next" title="编程参考" href="reference.html" />
+    <link rel="prev" title="开发" href="development.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="id1">
+<h1>正则表达式<a class="headerlink" href="#id1" title="永久链接至标题">¶</a></h1>
+<p>本插件中提到的正则表达式均指为 python 所实现的<a class="reference external" href="https://cn.bing.com/search?q=%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F">正则表达式</a>。</p>
+<p><a class="reference external" href="https://docs.python.org/zh-cn/2.7/library/re.html#regular-expression-syntax">python 正则表达式文档</a></p>
+<div class="section" id="id3">
+<h2>快速介绍<a class="headerlink" href="#id3" title="永久链接至标题">¶</a></h2>
+<p>使用简单示例描述常用正则规则，使用时请自行寻找相同逻辑的规则并替换对应值。</p>
+<p><code class="docutils literal notranslate"><span class="pre">abcd</span></code></p>
+<blockquote>
+<div><p>连续的 abcd 四个字母</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">abcd</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">abc</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">(?i)abcd</span></code></p>
+<blockquote>
+<div><p>在开头添加 <code class="docutils literal notranslate"><span class="pre">(?i)</span></code> 表示后续规则忽略大小写。</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">abcd</span></code> <code class="docutils literal notranslate"><span class="pre">aBcD</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">abc</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">^a</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">^</span></code> 字符代表字符串开头</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">abc</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">ba</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">\^a</span></code></p>
+<blockquote>
+<div><p>匹配：<code class="docutils literal notranslate"><span class="pre">^a</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a$</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">$</span></code> 字符代表字符串结尾</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">ba</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">ab</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a\$</span></code></p>
+<blockquote>
+<div><p>匹配：<code class="docutils literal notranslate"><span class="pre">a$</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a.</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">.</span></code> 代表任意字符</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">ab</span></code> <code class="docutils literal notranslate"><span class="pre">ac</span></code>  <code class="docutils literal notranslate"><span class="pre">a.</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code>  <code class="docutils literal notranslate"><span class="pre">b</span></code> <code class="docutils literal notranslate"><span class="pre">c</span></code> <code class="docutils literal notranslate"><span class="pre">.</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a\.</span></code></p>
+<blockquote>
+<div><p>匹配：<code class="docutils literal notranslate"><span class="pre">a.</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">ab</span></code> <code class="docutils literal notranslate"><span class="pre">ac</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">\d</span></code></p>
+<blockquote>
+<div><p>0-9 的数字</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">0</span></code> <code class="docutils literal notranslate"><span class="pre">1</span></code> <code class="docutils literal notranslate"><span class="pre">2</span></code> … <code class="docutils literal notranslate"><span class="pre">9</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code> <code class="docutils literal notranslate"><span class="pre">c</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">[abc]</span></code></p>
+<blockquote>
+<div><p>abc 这3个字母中的任意一个。</p>
+<p>匹配: <code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code> <code class="docutils literal notranslate"><span class="pre">c</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">d</span></code> <code class="docutils literal notranslate"><span class="pre">e</span></code> <code class="docutils literal notranslate"><span class="pre">f</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">[^abc]</span></code></p>
+<blockquote>
+<div><p>除了 abc 这3个字母中的任意字母。</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">d</span></code> <code class="docutils literal notranslate"><span class="pre">e</span></code> <code class="docutils literal notranslate"><span class="pre">f</span></code></p>
+<p>不匹配: <code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code> <code class="docutils literal notranslate"><span class="pre">c</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">ab|cd</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">ab</span></code> 或者 <code class="docutils literal notranslate"><span class="pre">cd</span></code></p>
+<p>配合其他规则时用括号包裹划分范围，例如 <code class="docutils literal notranslate"><span class="pre">a(ab|cd)e</span></code> 匹配 <code class="docutils literal notranslate"><span class="pre">aabe</span></code> <code class="docutils literal notranslate"><span class="pre">acde</span></code> 不匹配 <code class="docutils literal notranslate"><span class="pre">aabcde</span></code></p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">ab</span></code> <code class="docutils literal notranslate"><span class="pre">cd</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">bc</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a+</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">+</span></code> 代表前一个字符重复多次</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">aaa</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">b</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a*</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">*</span></code> 代表前一个字符重复多次或不存在</p>
+<p>常用 <code class="docutils literal notranslate"><span class="pre">.*</span></code> 匹配任意长度的任意字符</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">aaa</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code></p>
+<p>不匹配：都匹配，但是可配合其他规则。比如 <code class="docutils literal notranslate"><span class="pre">^ca*b$</span></code> 匹配 <code class="docutils literal notranslate"><span class="pre">cb</span></code>  <code class="docutils literal notranslate"><span class="pre">cab</span></code> <code class="docutils literal notranslate"><span class="pre">caab</span></code>，但是不匹配 <code class="docutils literal notranslate"><span class="pre">cbb</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a?</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">?</span></code> 代表前一个字符重复 0 或 1 次</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code></p>
+<p>不匹配：都匹配，但是可配合其他规则。比如 <code class="docutils literal notranslate"><span class="pre">^a?b$</span></code> 匹配 <code class="docutils literal notranslate"><span class="pre">ab</span></code>  <code class="docutils literal notranslate"><span class="pre">b</span></code>，但是不匹配 <code class="docutils literal notranslate"><span class="pre">aab</span></code> <code class="docutils literal notranslate"><span class="pre">cb</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a{2}</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">{2}</span></code> 代表前一个字符重复2次</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">aa</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a{2,3}</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">{2,3}</span></code> 代表前一个字符重复2到3次</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">aaa</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a{2,}</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">{2,}</span></code> 代表前一个字符重复2次及以上</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">aaa</span></code> <code class="docutils literal notranslate"><span class="pre">aaaa</span></code></p>
+<p>不匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">a{,3}</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">{,3}</span></code> 代表前一个字符重复3次及以下</p>
+<p>匹配：<code class="docutils literal notranslate"><span class="pre">a</span></code> <code class="docutils literal notranslate"><span class="pre">aa</span></code> <code class="docutils literal notranslate"><span class="pre">aaa</span></code></p>
+<p>不匹配：都匹配，但是可配合其他规则。 比如 <code class="docutils literal notranslate"><span class="pre">^a{,2}b$</span></code> 匹配 <code class="docutils literal notranslate"><span class="pre">aab</span></code>  <code class="docutils literal notranslate"><span class="pre">ab</span></code> <code class="docutils literal notranslate"><span class="pre">b</span></code>，但是不匹配 <code class="docutils literal notranslate"><span class="pre">aaab</span></code></p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+
+
+<h3>导航</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="plug-ins.html">插件节点</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">功能</a></li>
+<li class="toctree-l1"><a class="reference internal" href="menu.html">菜单</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pref.html">首选项设置</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyblish.html">发布</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">指南</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spec.html">规范</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">开发</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">正则表达式</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id3">快速介绍</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">编程参考</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">更新日志</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>快速搜索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, WuLiFang Studio.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/re.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
